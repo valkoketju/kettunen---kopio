@@ -23,7 +23,7 @@ export const Navigation = () => {
 
   return (
     <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl">
-      <div className="bg-card/90 backdrop-blur-xl border border-border/30 rounded-full shadow-[var(--shadow-soft)] transition-all duration-300 hover:shadow-[var(--shadow-medium)]">
+      <div className="bg-card/90 backdrop-blur-xl border border-border/30 rounded-md md:rounded-full shadow-[var(--shadow-soft)] transition-all duration-300 hover:shadow-[var(--shadow-medium)]">
         <div className="flex items-center justify-between px-6 h-14">
           <Link 
             to="/" 
@@ -57,7 +57,7 @@ export const Navigation = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 hover:bg-muted/50 rounded-full transition-colors"
+            className="md:hidden p-2 hover:bg-muted/50 rounded-md transition-colors"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -76,18 +76,18 @@ export const Navigation = () => {
                     key={link.to}
                     to={link.to}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-2 px-4 py-2 text-base font-semibold rounded-full transition-all ${
+                    className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-all ${
                       isActive(link.to) 
                         ? "bg-primary/10 text-primary" 
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     }`}
                   >
-                    <Icon size={18} />
+                    <Icon size={16} />
                     {link.label}
                   </Link>
                 );
               })}
-              <div className="flex items-center gap-2 px-2 py-1 border-t border-border/30 mt-2 pt-3">
+              <div className="flex items-center justify-center gap-4 px-2 py-2 border-t border-border/30 mt-2 pt-3">
                 <ThemeToggle />
                 <LanguageSwitcher />
               </div>
