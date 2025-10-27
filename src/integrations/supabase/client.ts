@@ -8,10 +8,33 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-  auth: {
-    storage: localStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-  }
-});
+// If env vars are missing (e.g., on GitHub Pages without secrets), avoid crashing the app.
+const hasEnv = Boolean(SUPABASE_URL) && Boolean(SUPABASE_PUBLISHABLE_KEY);
+
+export const supabase: any = hasEnv
+  ? createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        storage: localStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
+    })
+  : (() => {
+      console.warn(
+        '[Supabase] VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY is missing. Supabase features are disabled.'
+      );
+      const error = () => {
+        throw new Error('Supabase ympäristömuuttujat puuttuvat. Lisää ne GitHub-sekreteihin.');
+      };
+      return {
+        from: error,
+        rpc: error,
+        auth: {
+          signInWithPassword: error,
+          signOut: error,
+        },
+        storage: {
+          from: error,
+        },
+      };
+    })();
