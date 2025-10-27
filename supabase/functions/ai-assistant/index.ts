@@ -12,22 +12,27 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY not configured");
+
+    // Support configurable AI providers via environment variables.
+    // Falls back to Lovable gateway if custom variables are not provided.
+    const API_URL = Deno.env.get("AI_API_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions";
+    const API_KEY = Deno.env.get("AI_API_KEY") ?? Deno.env.get("LOVABLE_API_KEY");
+    const MODEL = Deno.env.get("AI_MODEL") ?? "google/gemini-2.5-flash";
+
+    if (!API_KEY) {
+      throw new Error("AI_API_KEY (tai LOVABLE_API_KEY) ei ole asetettu");
     }
 
     console.log("AI Assistant request received");
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch(API_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: MODEL,
         messages: [
           { 
             role: "system", 
@@ -53,6 +58,13 @@ serve(async (req) => {
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Maksutiedot vaaditaan. Ota yhteyttä ylläpitoon." }), {
           status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (response.status === 401) {
+        return new Response(JSON.stringify({ error: "Virheellinen tai puuttuva API-avain." }), {
+          status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }

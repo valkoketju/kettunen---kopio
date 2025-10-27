@@ -5,6 +5,7 @@ import { MessageCircle, X, Send, Sparkles } from "lucide-react";
 import { Card } from "./ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 
 type Message = {
   role: "user" | "assistant";
@@ -16,6 +17,7 @@ export const AIAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -28,10 +30,31 @@ export const AIAssistant = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Initialize a persistent session id for chat logging
+    const existing = localStorage.getItem("ai_session_id");
+    if (existing) {
+      setSessionId(existing);
+    } else {
+      const id = crypto.randomUUID();
+      localStorage.setItem("ai_session_id", id);
+      setSessionId(id);
+    }
+  }, []);
+
   const streamChat = async (userMessage: Message) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
     
     try {
+      // Log user message to Supabase
+      if (sessionId) {
+        await supabase.from("ai_messages").insert({
+          session_id: sessionId,
+          role: "user",
+          content: userMessage.content,
+        });
+      }
+
       const response = await fetch(CHAT_URL, {
         method: "POST",
         headers: {
@@ -112,6 +135,15 @@ export const AIAssistant = () => {
             break;
           }
         }
+      }
+
+      // Persist assistant message when stream completes
+      if (assistantContent && sessionId) {
+        await supabase.from("ai_messages").insert({
+          session_id: sessionId,
+          role: "assistant",
+          content: assistantContent,
+        });
       }
 
       setIsLoading(false);
