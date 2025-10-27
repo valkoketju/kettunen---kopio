@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Light natural beige background */
+    --background: 32 30% 95%;
+    --foreground: 30 6% 22%;
+
+    --card: 32 30% 97%;
+    --card-foreground: 30 6% 22%;
+
+    --popover: 32 30% 97%;
+    --popover-foreground: 30 6% 22%;
+
+    /* Forest/olive green primary */
+    --primary: 128 18% 35%;
+    --primary-foreground: 32 30% 97%;
+
+    /* Muted olive secondary */
+    --secondary: 128 12% 50%;
+    --secondary-foreground: 30 6% 22%;
+
+    /* Muted earth tones */
+    --muted: 32 20% 88%;
+    --muted-foreground: 30 6% 40%;
+
+    /* Warm terracotta accent */
+    --accent: 20 49% 52%;
+    --accent-foreground: 32 30% 97%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 32 30% 97%;
+
+    --border: 32 20% 85%;
+    --input: 32 20% 85%;
+    --ring: 128 18% 35%;
+
+    --radius: 1rem;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(128 18% 35%), hsl(128 18% 45%));
+    --gradient-subtle: linear-gradient(180deg, hsl(32 30% 95%), hsl(32 25% 92%));
+    --gradient-glow: radial-gradient(circle at center, hsl(20 49% 52% / 0.15), transparent 70%);
+
+    /* Shadows */
+    --shadow-soft: 0 4px 20px hsl(30 6% 22% / 0.08);
+    --shadow-medium: 0 8px 30px hsl(30 6% 22% / 0.12);
+    --shadow-glow: 0 0 40px hsl(20 49% 52% / 0.2);
+
+    --sidebar-background: 32 30% 97%;
+    --sidebar-foreground: 30 6% 22%;
+    --sidebar-primary: 128 18% 35%;
+    --sidebar-primary-foreground: 32 30% 97%;
+    --sidebar-accent: 32 20% 90%;
+    --sidebar-accent-foreground: 30 6% 22%;
+    --sidebar-border: 32 20% 85%;
+    --sidebar-ring: 128 18% 35%;
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    /* Deep dark gray/green background */
+    --background: 60 6% 11%;
+    --foreground: 40 28% 88%;
+
+    --card: 60 6% 14%;
+    --card-foreground: 40 28% 88%;
+
+    --popover: 60 6% 14%;
+    --popover-foreground: 40 28% 88%;
+
+    /* Moss/olive green primary */
+    --primary: 103 15% 39%;
+    --primary-foreground: 40 28% 88%;
+
+    /* Darker muted olive */
+    --secondary: 103 10% 25%;
+    --secondary-foreground: 40 28% 88%;
+
+    --muted: 60 6% 18%;
+    --muted-foreground: 40 15% 65%;
+
+    /* Bronze/copper accent */
+    --accent: 27 54% 46%;
+    --accent-foreground: 40 28% 88%;
+
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 40 28% 88%;
+
+    --border: 60 6% 20%;
+    --input: 60 6% 20%;
+    --ring: 103 15% 39%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(103 15% 39%), hsl(103 15% 49%));
+    --gradient-subtle: linear-gradient(180deg, hsl(60 6% 11%), hsl(60 6% 14%));
+    --gradient-glow: radial-gradient(circle at center, hsl(27 54% 46% / 0.15), transparent 70%);
+
+    --shadow-soft: 0 4px 20px hsl(0 0% 0% / 0.4);
+    --shadow-medium: 0 8px 30px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 40px hsl(27 54% 46% / 0.3);
+
+    --sidebar-background: 60 6% 14%;
+    --sidebar-foreground: 40 28% 88%;
+    --sidebar-primary: 103 15% 39%;
+    --sidebar-primary-foreground: 40 28% 88%;
+    --sidebar-accent: 60 6% 18%;
+    --sidebar-accent-foreground: 40 28% 88%;
+    --sidebar-border: 60 6% 20%;
+    --sidebar-ring: 103 15% 39%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background-image: 
+      radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, hsl(var(--accent) / 0.03) 0%, transparent 50%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        hsl(var(--foreground) / 0.02) 2px,
+        hsl(var(--foreground) / 0.02) 4px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        hsl(var(--foreground) / 0.02) 2px,
+        hsl(var(--foreground) / 0.02) 4px
+      );
+    background-attachment: fixed;
+  }
+
+}
