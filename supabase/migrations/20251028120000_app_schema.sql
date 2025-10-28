@@ -117,11 +117,25 @@ create table if not exists public.contact_messages (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   email text,
+  subject text,
   message text not null,
   is_read boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Ensure subject column exists if table predated this migration
+do $$
+begin
+  if not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'contact_messages'
+      and column_name = 'subject'
+  ) then
+    alter table public.contact_messages add column subject text;
+  end if;
+end $$;
 alter table public.contact_messages enable row level security;
 do $$ begin
   create policy "contact_messages_select_public" on public.contact_messages for select using (true);
