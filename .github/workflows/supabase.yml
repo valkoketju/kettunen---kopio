@@ -1,4 +1,4 @@
-name: Supabase Migrations
+name: Supabase Migrations & AI Function Deploy
 
 on:
   workflow_dispatch:
@@ -9,6 +9,9 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      AI_API_URL: ${{ secrets.AI_API_URL }}
+      AI_API_KEY: ${{ secrets.AI_API_KEY }}
+      AI_MODEL: ${{ secrets.AI_MODEL }}
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
@@ -16,3 +19,18 @@ jobs:
           version: latest
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
+      - name: Set AI secrets (optional)
+        shell: bash
+        run: |
+          set -e
+          if [ -n "$AI_API_KEY" ] || [ -n "$AI_API_URL" ] || [ -n "$AI_MODEL" ]; then
+            echo "Setting AI secrets..."
+            supabase secrets set \
+              AI_API_URL="$AI_API_URL" \
+              AI_API_KEY="$AI_API_KEY" \
+              AI_MODEL="$AI_MODEL"
+          else
+            echo "AI secrets not provided; skipping."
+          fi
+      - name: Deploy ai-assistant function
+        run: supabase functions deploy ai-assistant
