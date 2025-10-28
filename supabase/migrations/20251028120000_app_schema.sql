@@ -149,33 +149,33 @@ begin
       where n.nspname = 'storage' and c.relname = 'objects'
     ) then
       begin
-        create policy if not exists "images_select_public"
+        create policy "images_select_public"
           on storage.objects
           for select
           using (bucket_id = 'images');
-      exception when undefined_table then null; end;
+      exception when duplicate_object then null; end;
 
       begin
-        create policy if not exists "images_insert_public"
+        create policy "images_insert_public"
           on storage.objects
           for insert
           with check (bucket_id = 'images');
-      exception when undefined_table then null; end;
+      exception when duplicate_object then null; end;
 
       begin
-        create policy if not exists "images_update_public"
+        create policy "images_update_public"
           on storage.objects
           for update
           using (bucket_id = 'images')
           with check (bucket_id = 'images');
-      exception when undefined_table then null; end;
+      exception when duplicate_object then null; end;
 
       begin
-        create policy if not exists "images_delete_public"
+        create policy "images_delete_public"
           on storage.objects
           for delete
           using (bucket_id = 'images');
-      exception when undefined_table then null; end;
+      exception when duplicate_object then null; end;
     end if;
   end if;
 end; $$;
