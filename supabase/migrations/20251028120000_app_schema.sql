@@ -3,12 +3,15 @@ create extension if not exists pgcrypto;
 
 -- Utility: updated_at trigger function
 create or replace function public.handle_updated_at()
-returns trigger as $$
+returns trigger
+language plpgsql
+set search_path = pg_catalog
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 -- Portfolio items
 create table if not exists public.portfolio_items (
