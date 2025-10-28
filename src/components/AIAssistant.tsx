@@ -102,7 +102,19 @@ export const AIAssistant = () => {
         return;
       }
 
-      if (!response.ok || !response.body) {
+      if (!response.ok) {
+        // Jos vastaus ei ole ok, mutta ei ole 429 tai 402, käsitellään se tässä
+        const errorText = await response.text();
+        console.error("API error:", response.status, errorText);
+        
+        // Lisätään virheilmoitus keskusteluun
+        const errorMessage = "Virhe palvelussa. Yritä myöhemmin uudelleen.";
+        setMessages(prev => [...prev, { role: "assistant", content: errorMessage }]);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!response.body) {
         throw new Error("Failed to start stream");
       }
 
@@ -111,6 +123,7 @@ export const AIAssistant = () => {
       let textBuffer = "";
       let streamDone = false;
       let assistantContent = "";
+      let hasAddedMessage = false;
 
       while (!streamDone) {
         const { done, value } = await reader.read();
@@ -139,21 +152,29 @@ export const AIAssistant = () => {
             
             if (content) {
               assistantContent += content;
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
-                  return prev.map((m, i) => 
-                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                  );
-                }
-                return [...prev, { role: "assistant", content: assistantContent }];
-              });
+              
+              // Varmistetaan, että viesti lisätään vain kerran, jos sisältöä ei ole
+              if (!hasAddedMessage) {
+                setMessages(prev => [...prev, { role: "assistant", content: assistantContent }]);
+                hasAddedMessage = true;
+              } else {
+                // Päivitetään olemassa olevaa viestiä
+                setMessages(prev => 
+                  prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantContent } : m)
+                );
+              }
             }
-          } catch {
+          } catch (e) {
+            console.error("JSON parse error:", e, "Line:", jsonStr);
             textBuffer = line + "\n" + textBuffer;
             break;
           }
         }
+      }
+      
+      // Jos ei saatu mitään sisältöä, lisätään virheilmoitus
+      if (!assistantContent) {
+        setMessages(prev => [...prev, { role: "assistant", content: "Pahoittelut, en saanut vastausta. Yritä uudelleen." }]);
       }
 
       // Persist assistant message when stream completes
