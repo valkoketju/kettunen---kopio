@@ -213,3 +213,10 @@ begin
     end if;
   end if;
 end; $$;
+
+-- Force PostgREST schema cache reload (safe/no-op if unsupported)
+do $$
+begin
+  perform pg_notify('pgrst', 'reload schema');
+exception when others then null;
+end $$;

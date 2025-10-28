@@ -46,11 +46,28 @@ const Yhteystiedot = () => {
 
       setContactForm({ name: "", email: "", subject: "", message: "" });
     } catch (error: any) {
-      toast({
-        title: "Virhe",
-        description: error.message || "Viestin lähettäminen epäonnistui.",
-        variant: "destructive",
-      });
+      // Fallback: jos 'subject' puuttuu kannasta tai API-cachesta, yritä ilman sitä
+      const msg = String(error?.message || "").toLowerCase();
+      const subjectMissing = msg.includes("subject") && (msg.includes("schema cache") || msg.includes("does not exist") || msg.includes("column"));
+      if (subjectMissing) {
+        try {
+          const { error: retryError } = await supabase
+            .from("contact_messages")
+            .insert([{ name: contactForm.name, email: contactForm.email, message: contactForm.message }]);
+          if (retryError) throw retryError;
+
+          toast({ title: "Viesti lähetetty!", description: "Aihe-kenttä ohitettiin väliaikaisesti." });
+          setContactForm({ name: "", email: "", subject: "", message: "" });
+        } catch (retryErr: any) {
+          toast({ title: "Virhe", description: retryErr.message || "Viestin lähettäminen epäonnistui.", variant: "destructive" });
+        }
+      } else {
+        toast({
+          title: "Virhe",
+          description: error.message || "Viestin lähettäminen epäonnistui.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -79,11 +96,33 @@ const Yhteystiedot = () => {
 
       setReviewForm({ authorName: "", content: "", rating: 5, imageUrl: "" });
     } catch (error: any) {
-      toast({
-        title: "Virhe",
-        description: error.message || "Arvostelun lähettäminen epäonnistui.",
-        variant: "destructive",
-      });
+      // Fallback: jos 'author_name' puuttuu, käytä vanhaa 'name' saraketta
+      const msg = String(error?.message || "").toLowerCase();
+      const authorMissing = msg.includes("author_name") && (msg.includes("schema cache") || msg.includes("does not exist") || msg.includes("column"));
+      if (authorMissing) {
+        try {
+          const { error: retryError } = await supabase.from("reviews").insert([
+            {
+              name: reviewForm.authorName,
+              content: reviewForm.content,
+              rating: reviewForm.rating,
+              image_url: reviewForm.imageUrl || null,
+            },
+          ]);
+          if (retryError) throw retryError;
+
+          toast({ title: "Arvostelu lähetetty!", description: "Kenttä 'author_name' ohitettiin väliaikaisesti." });
+          setReviewForm({ authorName: "", content: "", rating: 5, imageUrl: "" });
+        } catch (retryErr: any) {
+          toast({ title: "Virhe", description: retryErr.message || "Arvostelun lähettäminen epäonnistui.", variant: "destructive" });
+        }
+      } else {
+        toast({
+          title: "Virhe",
+          description: error.message || "Arvostelun lähettäminen epäonnistui.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
