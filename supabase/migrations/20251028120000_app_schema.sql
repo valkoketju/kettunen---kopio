@@ -125,29 +125,57 @@ do $$ begin
   create policy "ai_messages_insert_public" on public.ai_messages for insert with check (true);
 exception when duplicate_object then null; end $$;
 
--- Storage bucket for images
-select storage.create_bucket('images', public => true);
+-- Storage bucket for images (guarded: only if storage extension exists)
+do $$
+begin
+  -- Check for storage schema
+  if exists (select 1 from pg_namespace where nspname = 'storage') then
+    -- Try creating bucket if function exists
+    if exists (
+      select 1
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'storage' and p.proname = 'create_bucket'
+    ) then
+      -- Use positional args to avoid named-arg mismatch across versions
+      perform storage.create_bucket('images', true);
+    end if;
 
--- Storage policies for images bucket
-do $$ begin
-  create policy if not exists "images_select_public"
-    on storage.objects
-    for select
-    using (bucket_id = 'images');
+    -- Storage policies for images bucket (only if objects table exists)
+    if exists (
+      select 1
+      from pg_class c
+      join pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'storage' and c.relname = 'objects'
+    ) then
+      begin
+        create policy if not exists "images_select_public"
+          on storage.objects
+          for select
+          using (bucket_id = 'images');
+      exception when undefined_table then null; end;
 
-  create policy if not exists "images_insert_public"
-    on storage.objects
-    for insert
-    with check (bucket_id = 'images');
+      begin
+        create policy if not exists "images_insert_public"
+          on storage.objects
+          for insert
+          with check (bucket_id = 'images');
+      exception when undefined_table then null; end;
 
-  create policy if not exists "images_update_public"
-    on storage.objects
-    for update
-    using (bucket_id = 'images')
-    with check (bucket_id = 'images');
+      begin
+        create policy if not exists "images_update_public"
+          on storage.objects
+          for update
+          using (bucket_id = 'images')
+          with check (bucket_id = 'images');
+      exception when undefined_table then null; end;
 
-  create policy if not exists "images_delete_public"
-    on storage.objects
-    for delete
-    using (bucket_id = 'images');
-exception when duplicate_object then null; end $$;
+      begin
+        create policy if not exists "images_delete_public"
+          on storage.objects
+          for delete
+          using (bucket_id = 'images');
+      exception when undefined_table then null; end;
+    end if;
+  end if;
+end; $$;
