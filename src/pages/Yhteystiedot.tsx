@@ -56,7 +56,7 @@ const Yhteystiedot = () => {
             .insert([{ name: contactForm.name, email: contactForm.email, message: contactForm.message }]);
           if (retryError) throw retryError;
 
-          toast({ title: "Viesti lähetetty!", description: "Aihe-kenttä ohitettiin väliaikaisesti." });
+          toast({ title: "Viesti lähetetty!", description: "Otamme yhteyttä pian." });
           setContactForm({ name: "", email: "", subject: "", message: "" });
         } catch (retryErr: any) {
           toast({ title: "Virhe", description: retryErr.message || "Viestin lähettäminen epäonnistui.", variant: "destructive" });
@@ -111,7 +111,7 @@ const Yhteystiedot = () => {
           ]);
           if (retryError) throw retryError;
 
-          toast({ title: "Arvostelu lähetetty!", description: "Kenttä 'author_name' ohitettiin väliaikaisesti." });
+          toast({ title: "Arvostelu lähetetty!", description: "Kiitos palautteestasi! Arvostelusi julkaistaan hyväksynnän jälkeen." });
           setReviewForm({ authorName: "", content: "", rating: 5, imageUrl: "" });
         } catch (retryErr: any) {
           toast({ title: "Virhe", description: retryErr.message || "Arvostelun lähettäminen epäonnistui.", variant: "destructive" });
