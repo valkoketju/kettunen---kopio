@@ -58,6 +58,7 @@ for each row execute function public.handle_updated_at();
 create table if not exists public.reviews (
   id uuid primary key default gen_random_uuid(),
   name text,
+  author_name text,
   content text,
   rating int check (rating between 1 and 5),
   is_approved boolean not null default false,
@@ -65,6 +66,22 @@ create table if not exists public.reviews (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Ensure author_name exists even if table already existed; backfill from name
+do $$
+begin
+  if not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public' and table_name = 'reviews' and column_name = 'author_name'
+  ) then
+    alter table public.reviews add column author_name text;
+    -- backfill any existing rows
+    update public.reviews
+    set author_name = coalesce(author_name, name)
+    where author_name is null;
+  end if;
+end $$;
 alter table public.reviews enable row level security;
 do $$ begin
   create policy "reviews_select_public" on public.reviews for select using (true);
