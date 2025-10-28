@@ -33,4 +33,4 @@ jobs:
             echo "AI secrets not provided; skipping."
           fi
       - name: Deploy ai-assistant function
-        run: supabase functions deploy ai-assistant
+        run: supabase functions deploy ai-assistant --no-verify-jwt
