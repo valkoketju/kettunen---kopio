@@ -40,14 +40,51 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ github.base_ref == 'main' && secrets.PRODUCTION_DB_PASSWORD || secrets.STAGING_DB_PASSWORD }}
-      SUPABASE_PROJECT_ID: ${{ github.base_ref == 'main' && secrets.PRODUCTION_PROJECT_ID || secrets.STAGING_PROJECT_ID }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
 
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+
+      - name: Install jq (for PR base_ref parsing)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Choose Supabase project id
+        env:
+          PRODUCTION_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
+          STAGING_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
+          SUPABASE_PROJECT_ID_FALLBACK: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          set -e
+          CHOSEN=""
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            BASE_REF=$(jq -r '.pull_request.base.ref' "$GITHUB_EVENT_PATH")
+            if [ "$BASE_REF" = "main" ]; then
+              CHOSEN="${PRODUCTION_PROJECT_ID}"
+            else
+              CHOSEN="${STAGING_PROJECT_ID}"
+            fi
+          else
+            if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+              CHOSEN="${PRODUCTION_PROJECT_ID}"
+            else
+              CHOSEN="${STAGING_PROJECT_ID}"
+            fi
+          fi
+          if [ -z "$CHOSEN" ]; then
+            CHOSEN="${SUPABASE_PROJECT_ID_FALLBACK}"
+          fi
+          echo "SUPABASE_PROJECT_ID=${CHOSEN}" >> $GITHUB_ENV
+
+      - name: Validate project id
+        run: |
+          if [ -z "${SUPABASE_PROJECT_ID}" ]; then
+            echo "ERROR: SUPABASE_PROJECT_ID is empty. Check repository secrets PRODUCTION_PROJECT_ID / STAGING_PROJECT_ID or SUPABASE_PROJECT_ID."
+            exit 1
+          fi
+          echo "Using Supabase project id (masked): ${SUPABASE_PROJECT_ID:0:6}***"
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push --dry-run
@@ -57,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      TF_VAR_linked_project: ${{ github.base_ref == 'main' && secrets.PRODUCTION_PROJECT_ID || secrets.STAGING_PROJECT_ID }}
+      TF_VAR_linked_project: ${{ secrets.SUPABASE_PROJECT_ID }}
       tf_actions_working_dir: supabase/remotes
     defaults:
       run:
@@ -68,6 +105,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
+
+      - name: Install jq (for PR base_ref parsing)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Choose Supabase project id
+        env:
+          PRODUCTION_PROJECT_ID: ${{ secrets.PRODUCTION_PROJECT_ID }}
+          STAGING_PROJECT_ID: ${{ secrets.STAGING_PROJECT_ID }}
+          SUPABASE_PROJECT_ID_FALLBACK: ${{ secrets.SUPABASE_PROJECT_ID }}
+        run: |
+          set -e
+          CHOSEN=""
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            BASE_REF=$(jq -r '.pull_request.base.ref' "$GITHUB_EVENT_PATH")
+            if [ "$BASE_REF" = "main" ]; then
+              CHOSEN="${PRODUCTION_PROJECT_ID}"
+            else
+              CHOSEN="${STAGING_PROJECT_ID}"
+            fi
+          else
+            if [ "${GITHUB_REF}" = "refs/heads/main" ]; then
+              CHOSEN="${PRODUCTION_PROJECT_ID}"
+            else
+              CHOSEN="${STAGING_PROJECT_ID}"
+            fi
+          fi
+          if [ -z "$CHOSEN" ]; then
+            CHOSEN="${SUPABASE_PROJECT_ID_FALLBACK}"
+          fi
+          echo "TF_VAR_linked_project=${CHOSEN}" >> $GITHUB_ENV
+
+      - name: Validate project id
+        run: |
+          if [ -z "${TF_VAR_linked_project}" ]; then
+            echo "ERROR: TF_VAR_linked_project is empty. Check repository secrets PRODUCTION_PROJECT_ID / STAGING_PROJECT_ID or SUPABASE_PROJECT_ID."
+            exit 1
+          fi
+          echo "Using Supabase project id (masked): ${TF_VAR_linked_project:0:6}***"
 
       - name: Terraform fmt
         id: fmt
