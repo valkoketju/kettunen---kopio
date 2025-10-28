@@ -42,8 +42,10 @@ export const AIAssistant = () => {
     }
   }, []);
 
-  const streamChat = async (userMessage: Message) => {
+  const streamChat = async (userMessage: Message, retryCount = 0) => {
     const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 2000; // 2 sekuntia
     
     try {
       // Log user message to Supabase
@@ -67,13 +69,27 @@ export const AIAssistant = () => {
       });
 
       if (response.status === 429) {
-        toast({
-          title: t("ai.error.rate"),
-          description: t("ai.error.rate.desc"),
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
+        if (retryCount < MAX_RETRIES) {
+          toast({
+            title: t("ai.error.retry"),
+            description: t("ai.error.retry.desc", { count: retryCount + 1, max: MAX_RETRIES }),
+            variant: "default",
+          });
+          
+          // Odota ennen uudelleenyritystä
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+          
+          // Yritä uudelleen kasvavalla viiveellä
+          return streamChat(userMessage, retryCount + 1);
+        } else {
+          toast({
+            title: t("ai.error.rate"),
+            description: t("ai.error.rate.desc"),
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
       }
 
       if (response.status === 402) {
