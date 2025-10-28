@@ -13,8 +13,23 @@ on:
       - develop
 
 jobs:
+  dryrun:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.ENABLE_BRANCHING != 'true' }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase link --project-ref ${{ env.SUPABASE_PROJECT_ID }}
+      - run: supabase db push --dry-run
+
   apply:
     runs-on: ubuntu-latest
+    if: ${{ secrets.ENABLE_BRANCHING == 'true' }}
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       TF_VAR_linked_project: ${{ secrets.SUPABASE_PROJECT_ID }}
@@ -53,7 +68,7 @@ jobs:
   migrate:
     needs: apply
     runs-on: ubuntu-latest
-    if: github.event.action != 'closed'
+    if: ${{ github.event.action != 'closed' && secrets.ENABLE_BRANCHING == 'true' }}
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ needs.apply.outputs.db_pass }}
