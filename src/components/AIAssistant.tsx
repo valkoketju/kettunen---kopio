@@ -45,7 +45,7 @@ export const AIAssistant = () => {
   const streamChat = async (userMessage: Message, retryCount = 0) => {
     // OpenAI API URL ja avain
     const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
-    const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || "sk-"; // Lisää oma OpenAI API avain tähän
+    const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || "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";
     
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 2000; // 2 sekuntia
