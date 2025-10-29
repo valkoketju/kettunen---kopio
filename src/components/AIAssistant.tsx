@@ -43,11 +43,10 @@ export const AIAssistant = () => {
   }, []);
 
   const streamChat = async (userMessage: Message, retryCount = 0) => {
-    // Käytä fallback-arvoja GitHub Pages -ympäristössä
-    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://urloegfvkujvfgsbderw.supabase.co";
-    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVybG9lZ2Z2a3VqdmZnc2JkZXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTg2NzY4MDAsImV4cCI6MjAxNDI1MjgwMH0.KlFE-0WG_mYMVwDgj7NnNytJQXVxBjvIJ_lh1XGpkPQ";
+    // OpenAI API URL ja avain
+    const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+    const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || "sk-"; // Lisää oma OpenAI API avain tähän
     
-    const CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-assistant`;
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 2000; // 2 sekuntia
     
@@ -65,15 +64,20 @@ export const AIAssistant = () => {
         }
       }
 
-      const response = await fetch(CHAT_URL, {
+      const response = await fetch(OPENAI_API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Supabase Edge Functions require an Authorization header by default
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          apikey: SUPABASE_KEY,
+          "Authorization": `Bearer ${OPENAI_API_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          stream: true
+        }),
       });
 
       if (response.status === 429) {
@@ -111,12 +115,32 @@ export const AIAssistant = () => {
       }
 
       if (!response.ok) {
-        // Jos vastaus ei ole ok, mutta ei ole 429 tai 402, käsitellään se tässä
+        // Käsitellään virheet
         const errorText = await response.text();
-        console.error("API error:", response.status, errorText);
+        console.error("OpenAI API error:", response.status, errorText);
         
-        // Lisätään virheilmoitus keskusteluun
-        const errorMessage = "Virhe palvelussa. Yritä myöhemmin uudelleen.";
+        let errorMessage = "Virhe palvelussa. Yritä myöhemmin uudelleen.";
+        
+        if (response.status === 401) {
+          errorMessage = "OpenAI API-avain on virheellinen tai puuttuu.";
+        } else if (response.status === 429) {
+          if (retryCount < MAX_RETRIES) {
+            toast({
+              title: t("ai.error.retry"),
+              description: t("ai.error.retry.desc", { count: retryCount + 1, max: MAX_RETRIES }),
+              variant: "default",
+            });
+            
+            // Odota ennen uudelleenyritystä
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (retryCount + 1)));
+            
+            // Yritä uudelleen kasvavalla viiveellä
+            return streamChat(userMessage, retryCount + 1);
+          } else {
+            errorMessage = "Liikaa pyyntöjä OpenAI:lle. Yritä myöhemmin uudelleen.";
+          }
+        }
+        
         setMessages(prev => [...prev, { role: "assistant", content: errorMessage }]);
         setIsLoading(false);
         return;
