@@ -31,7 +31,7 @@ export const AIAssistant = () => {
   }, [messages]);
 
   useEffect(() => {
-    // Initialize a persistent session id for chat logging
+    // Luo uusi sessio-ID, jos sitä ei ole vielä
     const existing = localStorage.getItem("ai_session_id");
     if (existing) {
       setSessionId(existing);
@@ -43,18 +43,26 @@ export const AIAssistant = () => {
   }, []);
 
   const streamChat = async (userMessage: Message, retryCount = 0) => {
-    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
+    // Käytä fallback-arvoja GitHub Pages -ympäristössä
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://urloegfvkujvfgsbderw.supabase.co";
+    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVybG9lZ2Z2a3VqdmZnc2JkZXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTg2NzY4MDAsImV4cCI6MjAxNDI1MjgwMH0.KlFE-0WG_mYMVwDgj7NnNytJQXVxBjvIJ_lh1XGpkPQ";
+    
+    const CHAT_URL = `${SUPABASE_URL}/functions/v1/ai-assistant`;
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 2000; // 2 sekuntia
     
     try {
       // Log user message to Supabase
       if (sessionId) {
-        await supabase.from("ai_messages").insert({
-          session_id: sessionId,
-          role: "user",
-          content: userMessage.content,
-        });
+        try {
+          await supabase.from("ai_messages").insert({
+            session_id: sessionId,
+            role: "user",
+            content: userMessage.content,
+          });
+        } catch (error) {
+          console.log("Viestien tallennus epäonnistui, jatketaan silti");
+        }
       }
 
       const response = await fetch(CHAT_URL, {
@@ -62,8 +70,8 @@ export const AIAssistant = () => {
         headers: {
           "Content-Type": "application/json",
           // Supabase Edge Functions require an Authorization header by default
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_KEY,
         },
         body: JSON.stringify({ messages: [...messages, userMessage] }),
       });
@@ -179,11 +187,15 @@ export const AIAssistant = () => {
 
       // Persist assistant message when stream completes
       if (assistantContent && sessionId) {
-        await supabase.from("ai_messages").insert({
-          session_id: sessionId,
-          role: "assistant",
-          content: assistantContent,
-        });
+        try {
+          await supabase.from("ai_messages").insert({
+            session_id: sessionId,
+            role: "assistant",
+            content: assistantContent,
+          });
+        } catch (error) {
+          console.log("Assistantin viestin tallennus epäonnistui, jatketaan silti");
+        }
       }
 
       setIsLoading(false);
