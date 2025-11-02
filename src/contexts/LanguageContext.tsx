@@ -17,16 +17,22 @@ const translations = {
     // Navigation
     "nav.portfolio": "Portfolio",
     "nav.shop": "Kauppa",
+    "nav.tattoos": "Maalaukset",
+    "nav.reviews": "Arvostelut",
     "nav.art": "Taideteokset",
     "nav.about": "Tarina",
     "nav.contact": "Yhteystiedot",
     
     // Home page
     "home.hero.title": "Taide",
+    "home.hero.subtitle": "Luonnosta inspiroitunutta taidetta",
     "home.hero.cta": "Tutustu teoksiin",
     "home.art.title": "Taideteokset",
     "home.art.description": "Tilaustyöt",
     "home.art.link": "Katso teokset",
+    "home.tattoo.title": "Maalaukset",
+    "home.tattoo.description": "Tilaustyönä toteutetut yksilölliset maalaukset - esimerkiksi lemmikistäsi",
+    "home.tattoo.link": "Tilaa oma maalauksesi",
     "home.shop.title": "Verkkokauppa",
     "home.shop.description": "Vapaat teokset",
     "home.shop.link": "Siirry kauppaan",
@@ -108,9 +114,9 @@ const translations = {
     "home.art.title": "Artworks",
     "home.art.description": "Unique artworks inspired by nature",
     "home.art.link": "View Works",
-    "home.tattoo.title": "Tattoos",
-    "home.tattoo.description": "Personal tattoos that tell your story",
-    "home.tattoo.link": "Explore Service",
+    "home.tattoo.title": "Paintings",
+    "home.tattoo.description": "Custom paintings made to order - for example of your beloved pet",
+    "home.tattoo.link": "Order your own painting",
     "home.shop.title": "Online Shop",
     "home.shop.description": "Buy art directly from our online shop",
     "home.shop.link": "Go to Shop",
@@ -197,6 +203,10 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
 
   const t = (key: string): string => {
     const lang = language as keyof typeof translations;
+    if (!translations[lang] || !translations[lang][key as keyof typeof translations[typeof lang]]) {
+      console.warn(`Missing translation: ${key} for language: ${lang}`);
+      return key;
+    }
     return translations[lang][key as keyof typeof translations[typeof lang]] || key;
   };
 
