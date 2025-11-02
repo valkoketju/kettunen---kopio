@@ -39,15 +39,14 @@ const Kauppa = () => {
         <div className="text-center mb-12" data-aos="zoom-in">
           <h1 className="text-5xl font-bold mb-4" data-aos="zoom-in">Kauppa</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto" data-aos="zoom-in">
-            Osta uniikkeja taideteoksia ja varaa tatuointiaikoja
+            Osta uniikkeja taideteoksia
           </p>
         </div>
 
         <Tabs defaultValue="kaikki" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
             <TabsTrigger value="kaikki">Kaikki</TabsTrigger>
             <TabsTrigger value="taideteokset">Taideteokset</TabsTrigger>
-            <TabsTrigger value="tatuoinnit">Tatuoinnit</TabsTrigger>
           </TabsList>
 
           <TabsContent value="kaikki">
@@ -56,10 +55,6 @@ const Kauppa = () => {
           
           <TabsContent value="taideteokset">
             <ProductGrid products={filterByCategory("taideteokset")} isLoading={isLoading} />
-          </TabsContent>
-          
-          <TabsContent value="tatuoinnit">
-            <ProductGrid products={filterByCategory("tatuoinnit")} isLoading={isLoading} />
           </TabsContent>
         </Tabs>
       </main>

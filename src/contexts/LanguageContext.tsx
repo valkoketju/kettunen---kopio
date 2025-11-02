@@ -1,73 +1,44 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-
-type Language = "fi" | "en";
-
-interface LanguageContextType {
-  language: Language;
-  setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
-}
-
-const translations: Record<Language, Record<string, string>> = {
-  fi: {
     // Navigation
     "nav.portfolio": "Portfolio",
     "nav.shop": "Kauppa",
-    "nav.reviews": "Arvostelut",
-    "nav.tattoos": "Tatuoinnit",
-    "nav.about": "Tietoa meistä",
+    "nav.art": "Taideteokset",
+    "nav.about": "Tarina",
     "nav.contact": "Yhteystiedot",
     
     // Home page
-    "home.hero.title": "Taide & Tatuoinnit",
-    "home.hero.subtitle": "Luonnon inspiroima taide ja tatuoinnit",
+    "home.hero.title": "Taide",
     "home.hero.cta": "Tutustu teoksiin",
     "home.art.title": "Taideteokset",
-    "home.art.description": "Ainutlaatuisia taideteoksia luonnosta inspiroituneena",
+    "home.art.description": "Tilaustyöt",
     "home.art.link": "Katso teokset",
-    "home.tattoo.title": "Tatuoinnit",
-    "home.tattoo.description": "Henkilökohtaiset tatuoinnit jotka kertovat tarinasi",
-    "home.tattoo.link": "Tutustu palveluun",
     "home.shop.title": "Verkkokauppa",
-    "home.shop.description": "Osta taidetta suoraan verkkokaupastamme",
+    "home.shop.description": "Vapaat teokset",
     "home.shop.link": "Siirry kauppaan",
     
     // Portfolio
     "portfolio.title": "Portfolio",
-    "portfolio.subtitle": "Tutustu ainutlaatuisiin teoksiimme",
+    "portfolio.subtitle": "Teokset",
     "portfolio.all": "Kaikki",
     "portfolio.empty": "Ei teoksia saatavilla.",
     
     // Shop
     "shop.title": "Verkkokauppa",
-    "shop.subtitle": "Osta taidetta suoraan verkkokaupastamme",
+    "shop.subtitle": "Vapaat teokset",
     "shop.all": "Kaikki",
     "shop.empty": "Ei tuotteita saatavilla.",
     "shop.contact": "Ota yhteyttä",
     
-    // Reviews
-    "reviews.title": "Arvostelut",
-    "reviews.subtitle": "Mitä asiakkaamme sanovat",
-    "reviews.average": "Keskiarvo",
-    "reviews.total": "arvostelua",
-    "reviews.empty": "Ei arvosteluja vielä.",
     
     // About
     "about.title": "Tietoa meistä",
-    "about.subtitle": "Luovuutta ja ammattitaitoa",
-    "about.mission.title": "Missiomme",
-    "about.mission.text": "Luomme ainutlaatuista taidetta ja tatuointeja, jotka kertovat sinun tarinasi. Jokainen teos on huolellisesti käsityönä valmistettu ja inspiroitunut luonnon kauneudesta.",
-    "about.story.title": "Tarinaamme",
-    "about.story.text": "Taidestudiomme on syntynyt intohimosta luontoa ja taidetta kohtaan. Olemme erikoistuneet luontoaiheisiin teoksiin ja tatuointeihin, jotka tuovat esiin jokaisen asiakkaan henkilökohtaisen tarinan.",
-    "about.team.title": "Tiimimme",
-    "about.team.artist": "Päätatuoija & Taiteilija",
-    "about.team.artist.bio": "Yli 10 vuoden kokemus tatuoinneista ja taiteesta. Erikoistunut luontoaiheisiin ja yksityiskohtaisiin töihin.",
+    "about.story.text": "Eläin taidetta.",
+    "about.team.title": "Tytti",
     "about.team.designer": "Graafinen Suunnittelija",
-    "about.team.designer.bio": "Luo ainutlaatuisia designeja ja auttaa asiakkaita löytämään täydellisen tyylin.",
+
     
     // Contact
     "contact.title": "Yhteystiedot",
-    "contact.subtitle": "Ota yhteyttä - vastaamme mielellämme!",
+    "contact.subtitle": "Ota yhteyttä",
     "contact.form.title": "Lähetä viesti",
     "contact.form.name": "Nimi",
     "contact.form.email": "Sähköposti",
@@ -201,39 +172,4 @@ const translations: Record<Language, Record<string, string>> = {
     // Footer
     "footer.rights": "All rights reserved.",
   },
-};
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem("language");
-    return (saved === "en" || saved === "fi") ? saved : "fi";
-  });
-
-  useEffect(() => {
-    localStorage.setItem("language", language);
-  }, [language]);
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-  };
-
-  const t = (key: string): string => {
-    return translations[language][key] || key;
-  };
-
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
-      {children}
-    </LanguageContext.Provider>
-  );
-};
-
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error("useLanguage must be used within LanguageProvider");
-  }
-  return context;
 };

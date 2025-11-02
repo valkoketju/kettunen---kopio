@@ -24,7 +24,6 @@ const Portfolio = () => {
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
       taideteokset: "Taideteokset",
-      tatuoinnit: "Tatuoinnit",
       muu: "Muu",
     };
     return labels[category] || category;
@@ -50,10 +49,9 @@ const Portfolio = () => {
         </div>
 
         <Tabs defaultValue="kaikki" className="w-full">
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-3 mb-8">
+          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
             <TabsTrigger value="kaikki">Kaikki</TabsTrigger>
             <TabsTrigger value="taideteokset">Taideteokset</TabsTrigger>
-            <TabsTrigger value="tatuoinnit">Tatuoinnit</TabsTrigger>
           </TabsList>
 
           <TabsContent value="kaikki">
@@ -62,10 +60,6 @@ const Portfolio = () => {
           
           <TabsContent value="taideteokset">
             <ProductGrid products={filterByCategory("taideteokset")} isLoading={isLoading} getCategoryLabel={getCategoryLabel} />
-          </TabsContent>
-          
-          <TabsContent value="tatuoinnit">
-            <ProductGrid products={filterByCategory("tatuoinnit")} isLoading={isLoading} getCategoryLabel={getCategoryLabel} />
           </TabsContent>
         </Tabs>
 
