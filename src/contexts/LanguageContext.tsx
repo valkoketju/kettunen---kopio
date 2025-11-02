@@ -1,3 +1,19 @@
+import React, { createContext, useContext, useState, ReactNode } from "react";
+
+type LanguageContextType = {
+  language: string;
+  setLanguage: (lang: string) => void;
+  t: (key: string) => string;
+};
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+type LanguageProviderProps = {
+  children: ReactNode;
+};
+
+const translations = {
+  fi: {
     // Navigation
     "nav.portfolio": "Portfolio",
     "nav.shop": "Kauppa",
@@ -74,14 +90,14 @@
     "cookie.decline": "Hylkää",
     
     // Footer
-    "footer.rights": "Kaikki oikeudet pidätetään.",
+    "footer.rights": "Kaikki oikeudet pidätetään."
   },
   en: {
     // Navigation
     "nav.portfolio": "Portfolio",
     "nav.shop": "Shop",
     "nav.reviews": "Reviews",
-    "nav.tattoos": "Tattoos",
+    "nav.tattoos": "Paintings",
     "nav.about": "About Us",
     "nav.contact": "Contact",
     
@@ -170,6 +186,35 @@
     "cookie.decline": "Decline",
     
     // Footer
-    "footer.rights": "All rights reserved.",
-  },
+    "footer.rights": "All rights reserved."
+  }
+};
+
+export const LanguageProvider = ({ children }: LanguageProviderProps) => {
+  const [language, setLanguage] = useState<string>(
+    localStorage.getItem("language") || "fi"
+  );
+
+  const t = (key: string): string => {
+    const lang = language as keyof typeof translations;
+    return translations[lang][key as keyof typeof translations[typeof lang]] || key;
+  };
+
+  React.useEffect(() => {
+    localStorage.setItem("language", language);
+  }, [language]);
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = (): LanguageContextType => {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+  return context;
 };
