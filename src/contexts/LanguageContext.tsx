@@ -50,6 +50,13 @@ const translations = {
     "shop.empty": "Ei tuotteita saatavilla.",
     "shop.contact": "Ota yhteyttä",
     
+    // Reviews
+    "reviews.title": "Arvostelut",
+    "reviews.subtitle": "Mitä asiakkaamme sanovat",
+    "reviews.average": "Keskiarvo",
+    "reviews.total": "arvostelua",
+    "reviews.empty": "Ei arvosteluja vielä.",
+    
     
     // About
     "about.title": "Tietoa meistä",
